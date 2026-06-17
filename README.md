@@ -1,15 +1,14 @@
 # YOLO-like model from Scratch
 This project is aboyt making YOLO-like model from scratch in order to understand it's architecture on lower level and because it's a cool project sar.
 
+[![video](https://img.youtube.com/vi/dBpNzq9-vfI/0.jpg)](https://www.youtube.com/watch?v=dBpNzq9-vfI)
+
 ## What's YOLO
 YOLO stands for You Only Look Once is object detection model with unique approach of predicting bounding boxes and class probabilities directly from full images in one evaluation which is much faster then previous two-stage detectors like RCNN or Fast-RCNN.
 
 <a href="https://arxiv.org/abs/1506.02640">https://arxiv.org/abs/1506.02640</a>
 <br>
 <a href="https://docs.ultralytics.com/#faq">https://docs.ultralytics.com/#faq</a>
-
-
-
 
 ## First approach: 3 detections heads
 In the previous experiment there was an issue with detecting person that are close or far away, it seemed like model was good at being average and had problems with edge-cases. This weakness has been improved by adding 3 detection heads:
@@ -25,15 +24,14 @@ In the previous experiment there was an issue with detecting person that are clo
 | Head conv blocks | Refine for prediction | NOT YET | NOT YET |
 | **Final 1×1 Conv** | **Output channels** | **YES** (ch 0-4) | **YES** (ch 5+) |
 
-### Backbone
+#### Backbone
 Backbone (Darknet-lite, 5 residual stages) is task-agnostic. It does not recognise concepts such as 'here is a person' or 'here is a box'. It learns to recognise generic visual patterns at increasingly higher levels of abstraction:
 
 - First layers: edges, gradients, textures
 - Central: parts of objects (body parts, faces, clothes)
 - Deep: whole objects + context (recognises ‘this is a person’ in a semantic sense)
 
-
-### FPN
+#### FPN
 Nor does it predict, semantic transfer.
 
 This solves a specific problem: feat_52 has excellent spatial resolution (52x52 = many cells = good for small objects), BUT shallow features — it can detect textures, but doesn't recognise what a 'person' is. In contrast, feat_13 has deep semantic features (“this is a person”), but poor resolution (13x13 = few cells = coarse grain).
@@ -44,10 +42,8 @@ Result: detection of small objects (head 52) benefits from the deep semantic und
 
 Still — FPN does not predict, it merely blends features.
 
-### Detection Heads
+#### Detection Heads
 This is where detection and classification take place.
-
-<br>
 
 Each head consists of a two-stage mechanism:
  1. Conv blocks (refinement) — several conv_blocks with a mix of 1x1 and 3x3 kernels. They transform features in the direction required for prediction. It's a bit like “an MLP dressed up as a convolutional network” — the model learns: “OK, these FPN-enriched features are general; tweak them so that they represent boxes and classes”.
@@ -64,7 +60,7 @@ channel  [4]    →  confidence        →  OBJECTNESS (whether it exists at all
 channels [5:]   →  class probabilities       →  CLASSIFICATION (what it is)
 ```
 
-## Why three detection heads — the multi-scale rationale
+### Why three detection heads — the multi-scale rationale
 
 A single 13x13 grid has fundamental limitations with size variation:
 
@@ -103,7 +99,6 @@ This means each head **only trains on objects in its size range**. No more weigh
 
 During inference, all 3 heads predict in parallel. Each typically lights up for objects in its target size range. The final list goes through unified NMS to dedupe (in case an object near the size threshold gets flagged on two adjacent scales).
 
-
 ### Why FPN (top-down feature fusion)
 
 The heads aren't independent — they connect via Feature Pyramid Network top-down. The deepest features (13x13, after the full backbone) are upsampled and concatenated with shallower features before feeding the 26x26 head. Same trick from 26 to 52.
@@ -112,7 +107,7 @@ The heads aren't independent — they connect via Feature Pyramid Network top-do
 
 Without FPN, the 52x52 head would only have shallow features and would mostly learn texture-level patterns (not "person-shaped" patterns). FPN gives it semantic grounding while preserving spatial resolution.
 
-## What is cell?
+### What is cell?
 ![alt text](assets/image.png)
 
 Each "cell" is **a single point in the model's input grid**. If the model outputs a tensor of size `(13, 13, ...)`, you have 169 cells (13x13). Each cell **"owns" a portion of the image** — with a 13x13 grid on a 416x416 input, this is exactly 32x32 pixels (416/13=32).
@@ -121,7 +116,7 @@ Each "cell" is **a single point in the model's input grid**. If the model output
 
 **An important distinction — "owns" ≠ "sees":** a cell *owns* its 32x32 px patch under its responsibility, but through the convolutional network it *sees* much more. This is called the **receptive field** — the area of the input that actually influences the value of that cell. A 13x13 cell, after passing through the entire backbone, has a receptive field of several hundred pixels — practically half the image. This is why deep cells perform well with large objects: they can see the entire object even though they *own* only a small fragment of it.
 
-## What is receptive field?
+### What is receptive field?
 ![alt text](assets/image.png)
 
 The receptive field is the portion of the input image that influences the value of a single cell in the activation map. Each convolutional layer aggregates information from a local window, so the deeper the layer, the larger the RF becomes. It is calculated recursively using two formulas:
@@ -139,7 +134,7 @@ Where jump is the distance in pixels of the input image between the centres of t
 - `Conv2D(kernel=1, ...)` → no RF change (kernel - 1 = 0)
 - Residual block (`1x1 → 3x3 stride 1`) counts effectively as one 3x3 conv (the 1x1 contributes nothing)
 
-## Stage-by-stage calculation
+### Stage-by-stage calculation
 
 | Layer | kernel | stride | jump after | RF after |
 |---|---|---|---|---|
@@ -156,7 +151,7 @@ Where jump is the distance in pixels of the input image between the centres of t
 | Stage 5 · conv 3x3, s=2 | 3 | 2 | 32 | 277 |
 | Stage 5 · 2 res blocks | 3 | 1 | 32 | 341 → **405** ← `feat_13` |
 
-## Final results per head
+### Final results per head
 
 | Head | Stride | Theoretical RF | Effective RF (~½ of theoretical) |
 |---|---|---|---|
@@ -164,7 +159,7 @@ Where jump is the distance in pixels of the input image between the centres of t
 | `feat_26` | 16 | ~245 px | ~125 px |
 | `feat_13` | 32 | ~405 px (≈ entire 416 px image) | ~200 px |
 
-## Why RF grows so fast in deeper stages
+### Why RF grows so fast in deeper stages
 
 Every stride-2 conv **doubles the jump**, so each subsequent residual block contributes more pixels to RF than the last:
 
@@ -174,7 +169,7 @@ Every stride-2 conv **doubles the jump**, so each subsequent residual block cont
 
 RF grows roughly exponentially with depth, not linearly. That's why just 2 res blocks in Stage 5 take RF from 277 → 405, while 4 res blocks in Stage 3 took it from 37 → 101.
 
-## How do we get to 52, 26, 13 from input 416x416?
+### How do we get to 52, 26, 13 from input 416x416?
 
 ![alt text](assets/image3.png)
 
