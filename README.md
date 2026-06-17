@@ -117,7 +117,7 @@ Each "cell" is **a single point in the model's input grid**. If the model output
 **An important distinction — "owns" ≠ "sees":** a cell *owns* its 32x32 px patch under its responsibility, but through the convolutional network it *sees* much more. This is called the **receptive field** — the area of the input that actually influences the value of that cell. A 13x13 cell, after passing through the entire backbone, has a receptive field of several hundred pixels — practically half the image. This is why deep cells perform well with large objects: they can see the entire object even though they *own* only a small fragment of it.
 
 ### What is receptive field?
-![alt text](assets/image.png)
+![alt text](assets/image2.png)
 
 The receptive field is the portion of the input image that influences the value of a single cell in the activation map. Each convolutional layer aggregates information from a local window, so the deeper the layer, the larger the RF becomes. It is calculated recursively using two formulas:
 
