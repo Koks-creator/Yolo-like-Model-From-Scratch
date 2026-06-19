@@ -1163,7 +1163,27 @@ I have tuned these models with dataset without mosaic augmentation and lowering 
 
 ### First model:
 ![alt text](training_res/reg_3_heads_model_train.png)
+In the case of the first model we can see that val loss went even lower than train loss hitting around 20-25. When it comes to the heads loss - 13x13 head has to lowest loss (around 0) while the highest loss 52x52 head sits at around 27.
 
 ### Second model:
 ![alt text](training_res/anchor_model_train.png)
+
+When it comes to the anchor version, we can notice that loss didn't went down as smoothly and deep like in the previous model. Val loss is still lower than the train loss, but it sits around 45-50. We can also observe similar tendency in heads loss, once again 13x13 is the lowest, while 52x52 the highest.
+
 ![alt text](training_res/anchors_tuned_model_train.png)
+
+Tuning improved the results, all loss metrics went down significantly. 
+
+### Third model:
+![alt text](training_res/reg_3_heads_ciou.png)
+
+In the final approach I've added CIoU loss and as presented on the graphs it kinda looks similiar to the anchor version but val loss managed to drop to 20ish territory.
+
+![alt text](training_res/reg_3_heads_ciou_tuned.png)
+
+Tuning also managed to drop down loss metrics quite a bit, at least for heads, becasue in val and train loss we can see new pattern, train loss is lower then the val loss, and val loss is increasing, so it was a good time to stop training because model was slowly overfitting.
+
+## Compare
+
+### Regular models
+<img src="assets/image4.png">
