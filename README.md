@@ -6,9 +6,13 @@ This project is about making YOLO-like model from scratch in order to understand
 ## What's YOLO
 YOLO stands for You Only Look Once is object detection model with unique approach of predicting bounding boxes and class probabilities directly from full images in one evaluation which is much faster then previous two-stage detectors like RCNN or Fast-RCNN.
 
-<a href="https://arxiv.org/abs/1506.02640">https://arxiv.org/abs/1506.02640</a>
+
+Read it sar: <br>
+https://arxiv.org/abs/1506.02640
 <br>
-<a href="https://docs.ultralytics.com/#faq">https://docs.ultralytics.com/#faq</a>
+https://docs.ultralytics.com/#faq
+<br>
+https://arxiv.org/abs/2304.00501
 
 ## First approach: 3 detections heads
 In the previous experiment there was an issue with detecting person that are close or far away, it seemed like model was good at being average and had problems with edge-cases. This weakness has been improved by adding 3 detection heads:
@@ -1186,4 +1190,82 @@ Tuning also managed to drop down loss metrics quite a bit, at least for heads, b
 ## Compare
 
 ### Regular models
+
+#### Test 1
 <img src="assets/image4.png">
+
+![alt text](assets/image5.png)
+![alt text](assets/image6.png)
+![alt text](assets/image7.png)
+
+#### Test 2
+![alt text](assets/image12.png)
+![alt text](assets/image13.png)
+![alt text](assets/image14.png)
+![alt text](assets/image15.png)
+
+#### Test 3
+![alt text](assets/image16.png)
+![alt text](assets/image17.png)
+![alt text](assets/image18.png)
+![alt text](assets/image19.png)
+
+### Tuned models
+
+#### Test 1
+![alt text](assets/image21.png)
+![alt text](assets/image22.png)
+![alt text](assets/image23.png)
+![alt text](assets/image24.png)
+
+#### Test 2
+![alt text](assets/image8.png)
+![alt text](assets/image9.png)
+![alt text](assets/image10.png)
+![alt text](assets/image11.png)
+
+#### Test 3
+![alt text](assets/image25.png)
+![alt text](assets/image26.png)
+![alt text](assets/image27.png)
+![alt text](assets/image28.png)
+
+### Colab Notebooks
+
+#### **ObjectDetectionTrain_mosaic.ipynb** - notebook for training regular 3 heads.
+
+#### **ObjectDetectionTrain_mosaic_CIoU.ipynb** - notebook for training regular 3 heads with CIoU.
+
+#### **jajson_anchory_v2.ipynb** - notebook for training anchor version.
+
+
+### Conclusion
+First of all, it is possible to train Yolo-like model using just free Colab environnement with GPU-T4 with decent results. In this case regular 3 heads models seemed to be the most successful, it is visible especially in the Test 2 and 3 in both tuned and regular - in those examples anchor version had more difficulties in detecting smaller objects (people who stand more far away). It's also visible in the training process itself in which anchors models always had higher loss. In the end such project helps to understand how YOLO works. 
+
+## Technical stuff
+
+### Setup
+ - Python 3.13+ (3.11+ should be fine as well too)
+ - Install requirements:
+    ```shell
+    pip install -r requirements.txt
+    ```
+
+### Libraries
+```
+matplotlib==3.10.8
+numpy==2.4.3
+pandas==3.0.2
+tensorflow==2.21.0
+opencv-python==4.11.0.86
+opencv-python-headless==4.11.0.86
+```
+
+### Config
+...
+
+### Detector
+...
+
+### Comparing models
+...
