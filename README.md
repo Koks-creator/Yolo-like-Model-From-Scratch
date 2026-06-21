@@ -1262,10 +1262,98 @@ opencv-python-headless==4.11.0.86
 ```
 
 ### Config
-...
+As name suggests `config.py` file stores project configuration, the most important are:
+```python
+
+# Model params
+IMG_SIZE: int  = 416
+NUM_BOXES: int = 1
+NUM_CLASSES: int = 1
+WIDTH_MULT: int = .7
+NUM_ANCHORS: int = 3
+```
+
+These parameters are specific for each model, but in my case they share the same values, but when u have mix of a different models with different configurations then you might want to remove them from this file.
 
 ### Detector
-...
+File called `detector.py` is a detector class which provides interface for detecting and displaying results.
+
+#### Parameters:
+- model_weights: `Path`
+- num_classes: `int` - Depends on the training parameteres.
+- num_boxes: `int` - How many boxes one cell of one scale predicts, depends on the training parameteres.
+- num_anchors: `int` - Depends on the training parameteres.
+- width_mult: `float` - Controls model size, depends on the training parameteres.
+- img_size: `int` - Depends on the training parameteres.
+- classes_path: `Path`
+- use_anchor: `bool` = False - Set to True when using anchor model.
+
+#### Example:
+```python
+ob = ObjectDetector(
+        model_weights=Config.MODELS_FOLDER / "model_mosaic" / "best_tuned_no_mosaic.weights.h5",
+        num_classes=Config.NUM_CLASSES,
+        num_boxes=Config.NUM_BOXES,
+        width_mult=Config.WIDTH_MULT,
+        img_size=Config.IMG_SIZE,
+        classes_path=Config.CLASSES_FILE,
+        use_anchor=False,
+        num_anchors=Config.NUM_ANCHORS
+    )
+img = cv2.imread("pexels-photo-4750056.jpeg")
+x = ob.predict_and_show(
+    image_input=img,
+    iou_threshold=.1
+)
+```
 
 ### Comparing models
-...
+Tool for compering models.
+
+#### Example
+```python
+cm  = CompareModels()
+
+configs = [
+    ModelConfig(
+        model_weights=Config.MODELS_FOLDER / "model_mosaic" / "best_tuned_no_mosaic.weights.h5",
+        num_classes=Config.NUM_CLASSES,
+        num_boxes=Config.NUM_BOXES,
+        width_mult=Config.WIDTH_MULT,
+        img_size=Config.IMG_SIZE,
+        classes_path=Config.CLASSES_FILE,
+        use_anchor=False,
+        num_anchors=Config.NUM_ANCHORS
+    ),
+    ModelConfig(
+        model_weights=Config.MODELS_FOLDER / "model_mosaic2" / "tuned_best.weights.h5",
+        num_classes=Config.NUM_CLASSES,
+        num_boxes=Config.NUM_BOXES,
+        width_mult=Config.WIDTH_MULT,
+        img_size=Config.IMG_SIZE,
+        classes_path=Config.CLASSES_FILE,
+        use_anchor=False,
+        num_anchors=Config.NUM_ANCHORS
+    ),
+    ModelConfig(
+        model_weights=Config.MODELS_FOLDER / "model_anchors2" / "tuned_best.weights.h5",
+        num_classes=Config.NUM_CLASSES,
+        num_boxes=Config.NUM_BOXES,
+        width_mult=Config.WIDTH_MULT,
+        img_size=Config.IMG_SIZE,
+        classes_path=Config.CLASSES_FILE,
+        use_anchor=True,
+        num_anchors=Config.NUM_ANCHORS
+    ),
+    
+]
+cm.load_models(models_config=configs)
+
+img = cv2.imread(r"C:\Users\table\PycharmProjects\MojeCos2\objekt_detekszyn\Screenshot_6.png")
+cm.compare_on_image_plt(image=img)
+# cm.compare_on_video(
+#     video_path=Config.VIDOES_FOLDER / "14735436_1280_720_60fps.mp4",
+#     iou_threshold=.2,
+#     conf_threshold=.3
+# )
+```
